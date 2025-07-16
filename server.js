@@ -133,34 +133,40 @@ app.get('/form', (req, res) => {
 app.post('/form', (req, res) => {
   const { session_id, amount } = req.body;
 
-  // Check if there's already a pending payment for this amount
-  msgdb.get(`SELECT * FROM payments WHERE amount = ? AND status = 'pending' ORDER BY created_at ASC LIMIT 1`, [amount], (err, pendingPayment) => {
+  // Check if there is already a pending payment for this amount
+  msgdb.get(`
+    SELECT * FROM payments 
+    WHERE amount = ? AND status = 'pending' 
+    ORDER BY created_at ASC LIMIT 1
+  `, [amount], (err, existing) => {
     if (err) return res.send('DB error');
 
-    if (pendingPayment) {
-      // Already someone paying this amount — redirect to wait
-      return res.redirect(`/form-waiting/${pendingPayment.id}`);
+    if (existing) {
+      // Someone already trying this amount — redirect to their waiting page
+      return res.redirect(`/form-waiting/${existing.id}`);
     }
 
-    // No pending payment — assign new QR
+    // No one else trying — safe to assign a QR
     msgdb.all(`SELECT * FROM qr_codes`, [], (err, allQrs) => {
       if (err) return res.send('QR load error');
 
+      // Remove QR codes already used by other pending transactions
       msgdb.all(`SELECT qr_id FROM payments WHERE status = 'pending'`, [], (err, used) => {
         const usedQrIds = used.map(r => r.qr_id);
         const availableQr = allQrs.find(qr => !usedQrIds.includes(qr.qr_id));
-        if (!availableQr) return res.send('No QR available at the moment.');
+        if (!availableQr) return res.send('❌ No QR available right now. Please try again.');
 
-        msgdb.run(`INSERT INTO payments (qr_id, session_id, amount) VALUES (?, ?, ?)`,
-          [availableQr.qr_id, session_id, amount], function (err) {
-            if (err) return res.send('Insert error');
-            res.redirect(`/form-waiting/${this.lastID}`);
-          });
+        // Assign this QR and create payment
+        msgdb.run(`
+          INSERT INTO payments (qr_id, session_id, amount) VALUES (?, ?, ?)
+        `, [availableQr.qr_id, session_id, amount], function (err) {
+          if (err) return res.send('❌ Insert error');
+          res.redirect(`/form-waiting/${this.lastID}`);
+        });
       });
     });
   });
 });
-
 // Display waiting page with QR code
 app.get('/form-waiting/:id', (req, res) => {
   const id = req.params.id;
@@ -188,15 +194,16 @@ app.get('/form-waiting/:id', (req, res) => {
     msgdb.get(`SELECT id FROM payments WHERE amount = ? AND status = 'pending' ORDER BY created_at ASC LIMIT 1`, [amount], async (err, firstPending) => {
       if (err || !firstPending) return res.redirect('/failure');
 
-      if (parseInt(firstPending.id) !== parseInt(id)) {
-        // Not your turn — wait
-        return res.render('form-waiting', {
-          session_id: row.session_id,
-          qr_link: null,
-          qr_upi: null,
-          amount: row.amount
-        });
-      }
+   if (parseInt(firstPending.id) !== parseInt(id)) {
+  // Not your turn yet
+  return res.render('form-waiting', {
+    session_id: row.session_id,
+    qr_link: null,
+    qr_upi: null,
+    amount: row.amount
+  });
+}
+
 
       // It's your turn — show QR
       try {
