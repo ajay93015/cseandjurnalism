@@ -129,44 +129,45 @@ app.get('/form', (req, res) => {
   res.render('form');
 });
 
-// Handle payment form submission
 app.post('/form', (req, res) => {
   const { session_id, amount } = req.body;
 
-  // Check if there is already a pending payment for this amount
+  // Only block if same amount is already pending
   msgdb.get(`
     SELECT * FROM payments 
-    WHERE amount = ? AND status = 'pending' 
+    WHERE amount = ? AND status = 'pending'
     ORDER BY created_at ASC LIMIT 1
   `, [amount], (err, existing) => {
-    if (err) return res.send('DB error');
+    if (err) return res.send('❌ DB error');
 
     if (existing) {
-      // Someone already trying this amount — redirect to their waiting page
+      // Same amount already in progress — wait
       return res.redirect(`/form-waiting/${existing.id}`);
     }
 
-    // No one else trying — safe to assign a QR
+    // No same-amount pending — allow assigning new QR
     msgdb.all(`SELECT * FROM qr_codes`, [], (err, allQrs) => {
       if (err) return res.send('QR load error');
 
-      // Remove QR codes already used by other pending transactions
-      msgdb.all(`SELECT qr_id FROM payments WHERE status = 'pending'`, [], (err, used) => {
-        const usedQrIds = used.map(r => r.qr_id);
+      // Optional: skip QR already in use (for safety)
+      msgdb.all(`SELECT qr_id FROM payments WHERE status = 'pending'`, [], (err, usedQrs) => {
+        const usedQrIds = usedQrs.map(r => r.qr_id);
         const availableQr = allQrs.find(qr => !usedQrIds.includes(qr.qr_id));
-        if (!availableQr) return res.send('❌ No QR available right now. Please try again.');
+        if (!availableQr) return res.send('❌ No QR available now, try again.');
 
-        // Assign this QR and create payment
+        // Save new payment
         msgdb.run(`
-          INSERT INTO payments (qr_id, session_id, amount) VALUES (?, ?, ?)
+          INSERT INTO payments (qr_id, session_id, amount) 
+          VALUES (?, ?, ?)
         `, [availableQr.qr_id, session_id, amount], function (err) {
-          if (err) return res.send('❌ Insert error');
+          if (err) return res.send('❌ DB insert error');
           res.redirect(`/form-waiting/${this.lastID}`);
         });
       });
     });
   });
 });
+
 // Display waiting page with QR code
 app.get('/form-waiting/:id', (req, res) => {
   const id = req.params.id;
