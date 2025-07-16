@@ -328,10 +328,10 @@ setInterval(() => {
 // Call checkup only if IST hour is between 8 and 20
 if (istHour >= 9 && istHour <= 19) {
   
-    checkup();
+  //  checkup();
 }
 
-    
+/*    
 // Ping every 4 minutes (less than Glitch's 5-minute sleep)
 setInterval(() => {
   sites.forEach(site => {
@@ -340,7 +340,7 @@ setInterval(() => {
       .catch(err => console.log(`❌ Error pinging ${site}:`, err.message));
   });
 }, 240000); // every 4 minutes
-
+*/
 
 app.get("/ping", (req, res) => {
   
