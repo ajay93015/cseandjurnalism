@@ -8,22 +8,32 @@
   <p>🚦 Someone else is paying ₹<%= amount %>. Please wait for your turn.</p>
   <p>⏱️ This page will refresh automatically after <span id="timer">05:00</span></p>
 
+  <script src="/socket.io/socket.io.js"></script>
   <script>
-    let seconds = 300;
-    const timerEl = document.getElementById("timer");
+    const socket = io();
+    const paymentId = "<%= id %>";
+    socket.emit("watch-payment", paymentId);
 
-    function updateTimer() {
-      let min = Math.floor(seconds / 60);
-      let sec = seconds % 60;
-      timerEl.textContent = `${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
-      if (seconds > 0) {
-        seconds--;
-        setTimeout(updateTimer, 1000);
-      } else {
-        location.reload(); // ⟳ Refresh after 5 minutes
+    socket.on("payment-status", (data) => {
+      if (data.paymentId == paymentId && data.status === "success") {
+        location.reload(); // Try to get QR if promoted
       }
-    }
+    });
 
-    updateTimer();
+    // Countdown Timer
+    let totalSeconds = 5 * 60;
+    const timerDisplay = document.getElementById("timer");
+
+    const interval = setInterval(() => {
+      totalSeconds--;
+      const minutes = String(Math.floor(totalSeconds / 60)).padStart(2, '0');
+      const seconds = String(totalSeconds % 60).padStart(2, '0');
+      timerDisplay.textContent = `${minutes}:${seconds}`;
+
+      if (totalSeconds <= 0) {
+        clearInterval(interval);
+        location.reload();
+      }
+    }, 1000);
   </script>
 <% } %>
