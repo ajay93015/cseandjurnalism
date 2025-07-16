@@ -80,30 +80,28 @@ const renderPage = (page, options = {}) => (req, res) => res.render(page, option
 
 const msgdb = new sqlite3.Database('payments.db');
 msgdb.serialize(() => {
-
+  // Create 'payments' table
   msgdb.run(`CREATE TABLE IF NOT EXISTS payments (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    qr_id INTEGER,
+    qr_id TEXT,
     session_id TEXT,
     amount INTEGER,
     status TEXT DEFAULT 'pending',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
   )`);
 
-    
-msgdb.run(`CREATE TABLE IF NOT EXISTS qr_codes (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  qr_id TEXT UNIQUE,
-  account_last4 TEXT,
-  upi_id TEXT
-)`);
+  // Create 'qr_codes' table
+  msgdb.run(`CREATE TABLE IF NOT EXISTS qr_codes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    qr_id TEXT UNIQUE,
+    account_last4 TEXT,
+    upi_id TEXT
+  )`);
 
-  // Sample QR IDs
-   msgdb.run(`INSERT OR IGNORE INTO qr_codes (qr_id, account_last4, upi_id) VALUES 
-  ('QR1', '3115', '9301751642@pnb'),
-  ('QR2', '7145', '9301751642@ybl'),
-  ('QR3', '8989', 'example@okicici')`);
-  
+  // Insert only one QR
+  msgdb.run(`INSERT OR IGNORE INTO qr_codes (qr_id, account_last4, upi_id) VALUES 
+    ('QR1', '3115', '9301751642@pnb')
+  `);
 });
 
 app.post('/ntmsg', (req, res) => {
