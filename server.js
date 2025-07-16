@@ -124,7 +124,6 @@ app.post('/ntmsg', (req, res) => {
 });
 
 
-
 // Display payment form
 app.get('/form', (req, res) => {
   res.render('form');
@@ -134,29 +133,35 @@ app.get('/form', (req, res) => {
 app.post('/form', (req, res) => {
   const { session_id, amount } = req.body;
 
-  // Find all QR codes
-  msgdb.all(`SELECT * FROM qr_codes`, [], (err, allQrs) => {
-    if (err) return res.send('QR load error');
+  // Check if there's already a pending payment for this amount
+  msgdb.get(`SELECT * FROM payments WHERE amount = ? AND status = 'pending' ORDER BY created_at ASC LIMIT 1`, [amount], (err, pendingPayment) => {
+    if (err) return res.send('DB error');
 
-    // Find already used qr_ids for this amount (still pending)
-    msgdb.all(`SELECT qr_id FROM payments WHERE amount = ? AND status = 'pending'`, [amount], (err, pendingQrs) => {
-      const usedQrIds = pendingQrs.map(row => row.qr_id);
-      
-      // Find first available QR not used for this amount
-      const availableQr = allQrs.find(qr => !usedQrIds.includes(qr.qr_id));
-      if (!availableQr) return res.send('No QR available for this amount at the moment. Try different amount.');
+    if (pendingPayment) {
+      // Already someone paying this amount — redirect to wait
+      return res.redirect(`/form-waiting/${pendingPayment.id}`);
+    }
 
-      // Save new payment with unique QR
-      msgdb.run(`INSERT INTO payments (qr_id, session_id, amount) VALUES (?, ?, ?)`,
-        [availableQr.qr_id, session_id, amount], function (err) {
-          if (err) return res.send('DB error');
-          res.redirect(`/form-waiting/${this.lastID}`);
-        });
+    // No pending payment — assign new QR
+    msgdb.all(`SELECT * FROM qr_codes`, [], (err, allQrs) => {
+      if (err) return res.send('QR load error');
+
+      msgdb.all(`SELECT qr_id FROM payments WHERE status = 'pending'`, [], (err, used) => {
+        const usedQrIds = used.map(r => r.qr_id);
+        const availableQr = allQrs.find(qr => !usedQrIds.includes(qr.qr_id));
+        if (!availableQr) return res.send('No QR available at the moment.');
+
+        msgdb.run(`INSERT INTO payments (qr_id, session_id, amount) VALUES (?, ?, ?)`,
+          [availableQr.qr_id, session_id, amount], function (err) {
+            if (err) return res.send('Insert error');
+            res.redirect(`/form-waiting/${this.lastID}`);
+          });
+      });
     });
   });
 });
 
-// Display waiting page with QR code for payment
+// Display waiting page with QR code
 app.get('/form-waiting/:id', (req, res) => {
   const id = req.params.id;
 
@@ -177,22 +182,36 @@ app.get('/form-waiting/:id', (req, res) => {
       return res.redirect(`/success/${id}`);
     } else if (row.status === 'failed') {
       return res.redirect('/failure');
-    } else {
-      // Generate QR code and render waiting page
-      async function generateQR() {
-        try {
-          const qrUrl = await qrcode.toDataURL(qr_link);
-          res.render('form-waiting', {
-            session_id: row.session_id,
-            qr_link: qrUrl,
-            qr_upi: qr_link
-          });
-        } catch (err) {
-          console.error('QR generation failed:', err);
-        }
-      }
-      generateQR();
     }
+
+    // Check if this payment is the first pending for the amount
+    msgdb.get(`SELECT id FROM payments WHERE amount = ? AND status = 'pending' ORDER BY created_at ASC LIMIT 1`, [amount], async (err, firstPending) => {
+      if (err || !firstPending) return res.redirect('/failure');
+
+      if (parseInt(firstPending.id) !== parseInt(id)) {
+        // Not your turn — wait
+        return res.render('form-waiting', {
+          session_id: row.session_id,
+          qr_link: null,
+          qr_upi: null,
+          amount: row.amount
+        });
+      }
+
+      // It's your turn — show QR
+      try {
+        const qrUrl = await qrcode.toDataURL(qr_link);
+        res.render('form-waiting', {
+          session_id: row.session_id,
+          qr_link: qrUrl,
+          qr_upi: qr_link,
+          amount: row.amount
+        });
+      } catch (err) {
+        console.error('QR generation failed:', err);
+        res.redirect('/failure');
+      }
+    });
   });
 });
 
@@ -209,7 +228,8 @@ app.get('/failure', (req, res) => {
   res.render('failure');
 });
 
-// Handle incoming payment SMS
+console.log(new Date())
+// Handle incoming SMS
 app.post('/payment', (req, res) => {
   const message = req.body.message;
   const amountMatch = message.match(/INR\s+(\d+)\.(\d{2})?/i);
@@ -224,35 +244,30 @@ app.post('/payment', (req, res) => {
   const amount = parseInt(amountMatch[1]);
   const acctLast4 = acctMatch[1];
 
-  // Calculate current IST time and subtract 1 minute
   const now = new Date();
   const istOffsetMs = 5.5 * 60 * 60 * 1000;
   const istNow = new Date(now.getTime() + istOffsetMs);
-  const oneMinAgo = new Date(istNow.getTime() - 4 * 60 * 1000);
-  const formattedTime = oneMinAgo.toISOString().replace('T', ' ').split('.')[0];
+  const fourMinAgo = new Date(istNow.getTime() - 4 * 60 * 1000);
+  const formattedTime = fourMinAgo.toISOString().replace('T', ' ').split('.')[0];
 
   console.log("⏱️ IST now:", istNow.toLocaleString(), "| Auto-fail if before:", formattedTime);
 
-  // Fail payments that are too old (pending more than 1 minute)
+  // Auto-fail old pending payments
   msgdb.run(`
     UPDATE payments
     SET status = 'failed'
     WHERE status = 'pending' AND created_at <= ?
   `, [formattedTime], (failErr) => {
     if (failErr) console.error("❌ Auto-fail error:", failErr);
-    
-    // Check for pending payment match
+
+    // Try to match this payment
     msgdb.get(`
-      SELECT p.id, p.qr_id 
-      FROM payments p
+      SELECT p.id FROM payments p
       JOIN qr_codes q ON p.qr_id = q.qr_id
       WHERE p.amount = ? AND p.status = 'pending' AND q.account_last4 = ?
       ORDER BY p.created_at ASC LIMIT 1
     `, [amount, acctLast4], (err, row) => {
-      if (err) {
-        console.error("❌ DB error:", err);
-        return res.status(500).send("Server error");
-      }
+      if (err) return res.status(500).send("DB error");
 
       if (row) {
         msgdb.run(`
@@ -260,33 +275,31 @@ app.post('/payment', (req, res) => {
           SET status = 'success', created_at = CURRENT_TIMESTAMP
           WHERE id = ?
         `, [row.id], (updateErr) => {
-          if (updateErr) return res.status(500).send("Error updating payment");
-          res.send("✅ Payment matched & verified");
+          if (updateErr) return res.status(500).send("Update error");
+          res.send("✅ Payment matched & marked successful");
         });
       } else {
-        res.send("⚠️ No match found for this payment");
+        res.send("⚠️ No matching pending payment found");
       }
     });
   });
 });
 
-// Set interval for auto-failing old pending payments every minute
+// Auto-fail checker every 4 minutes
 setInterval(() => {
   const now = new Date();
   const istNow = new Date(now.getTime() + 5.5 * 60 * 60 * 1000);
-  const oneMinAgo = new Date(istNow.getTime() - 4 * 60 * 1000);
-  const formattedTime = oneMinAgo.toISOString().replace('T', ' ').split('.')[0];
+  const fourMinAgo = new Date(istNow.getTime() - 4 * 60 * 1000);
+  const formattedTime = fourMinAgo.toISOString().replace('T', ' ').split('.')[0];
 
   msgdb.run(`
     UPDATE payments
     SET status = 'failed'
     WHERE status = 'pending' AND created_at <= ?
   `, [formattedTime], (err) => {
-    if (err) console.error("⏱️ Auto-fail error:", err);
+    if (err) console.error("⏱️ Auto-fail interval error:", err);
   });
-}, 4 * 60 * 1000); // every 1 minute
-
-
+}, 4 * 60 * 1000);
 
 
 const sites = [
