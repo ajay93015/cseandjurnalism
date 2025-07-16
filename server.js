@@ -121,8 +121,24 @@ app.post('/ntmsg', (req, res) => {
   res.sendStatus(200);
 });
 
+// WebSocket connections
+io.on('connection', (socket) => {
+  console.log('🔌 New client connected');
 
-// Display payment form
+  socket.on('watch-payment', (paymentId) => {
+    socket.join(`payment_${paymentId}`);
+  });
+
+  socket.on('disconnect', () => {
+    console.log('❌ Client disconnected');
+  });
+});
+
+function emitPaymentUpdate(paymentId, status) {
+  io.to(`payment_${paymentId}`).emit('payment-status', { paymentId, status });
+}
+
+// Payment Form
 app.get('/form', (req, res) => {
   res.render('form');
 });
@@ -130,175 +146,83 @@ app.get('/form', (req, res) => {
 app.post('/form', (req, res) => {
   const { session_id, amount } = req.body;
 
-  // Check if QR1 is in use for any pending payment
-  msgdb.get(`
-    SELECT * FROM payments 
-    WHERE qr_id = 'QR1' AND status = 'pending'
-    ORDER BY created_at ASC LIMIT 1
-  `, (err, pendingQR1) => {
+  msgdb.get(`SELECT * FROM payments WHERE qr_id = 'QR1' AND status = 'pending' ORDER BY created_at ASC LIMIT 1`, (err, pending) => {
     if (err) return res.send('❌ DB error');
+    if (pending) return res.redirect(`/form-waiting/${pending.id}`);
 
-    if (pendingQR1) {
-      // QR1 is in use — redirect to wait on existing one
-      return res.redirect(`/form-waiting/${pendingQR1.id}`);
-    }
+    msgdb.get(`SELECT * FROM qr_codes WHERE qr_id = 'QR1'`, [], (err, qr) => {
+      if (err || !qr) return res.send('❌ QR not found');
 
-    // QR1 is free — allow new assignment
-    msgdb.get(`SELECT * FROM qr_codes WHERE qr_id = 'QR1'`, [], (err, qrRow) => {
-      if (err || !qrRow) return res.send('❌ QR not found');
-
-      msgdb.run(`
-        INSERT INTO payments (qr_id, session_id, amount) 
-        VALUES (?, ?, ?)
-      `, [qrRow.qr_id, session_id, amount], function (err) {
-        if (err) return res.send('❌ DB insert error');
-        res.redirect(`/form-waiting/${this.lastID}`);
-      });
+      msgdb.run(`INSERT INTO payments (qr_id, session_id, amount) VALUES (?, ?, ?)`,
+        [qr.qr_id, session_id, amount], function (err) {
+          if (err) return res.send('❌ Insert error');
+          res.redirect(`/form-waiting/${this.lastID}`);
+        });
     });
   });
 });
 
-// Display waiting page with QR code
 app.get('/form-waiting/:id', (req, res) => {
   const id = req.params.id;
 
-  msgdb.get(`
-    SELECT payments.*, qr_codes.upi_id 
-    FROM payments 
-    JOIN qr_codes ON payments.qr_id = qr_codes.qr_id 
-    WHERE payments.id = ?
-  `, [id], (err, row) => {
-    if (!row) return res.redirect('/failure');
+  msgdb.get(`SELECT payments.*, qr_codes.upi_id FROM payments JOIN qr_codes ON payments.qr_id = qr_codes.qr_id WHERE payments.id = ?`,
+    [id], async (err, row) => {
+      if (!row) return res.redirect('/failure');
 
-    const upi = row.upi_id;
-    const amount = row.amount;
-    const name = 'Ajay';
-    const qr_link = `upi://pay?pa=${upi}&pn=${name}&am=${amount}&cu=INR`;
+      const amount = row.amount;
+      const qr_link = `upi://pay?pa=${row.upi_id}&pn=Ajay&am=${amount}&cu=INR`;
 
-    if (row.status === 'success') {
-      return res.redirect(`/success/${id}`);
-    } else if (row.status === 'failed') {
-      return res.redirect('/failure');
-    }
+      msgdb.get(`SELECT id FROM payments WHERE qr_id = 'QR1' AND status = 'pending' ORDER BY created_at ASC LIMIT 1`,
+        [], async (err, firstPending) => {
+          if (!firstPending || parseInt(firstPending.id) !== parseInt(id)) {
+            return res.render('form-waiting', {
+              session_id: row.session_id,
+              qr_link: null,
+              qr_upi: null,
+              amount: row.amount,
+              id
+            });
+          }
 
-    // Check if this payment is the first pending for the amount
-    msgdb.get(`SELECT id FROM payments WHERE amount = ? AND status = 'pending' ORDER BY created_at ASC LIMIT 1`, [amount], async (err, firstPending) => {
-      if (err || !firstPending) return res.redirect('/failure');
-
-   if (parseInt(firstPending.id) !== parseInt(id)) {
-  // Not your turn yet
-  return res.render('form-waiting', {
-    session_id: row.session_id,
-    qr_link: null,
-    qr_upi: null,
-    amount: row.amount
-  });
-}
-
-
-      // It's your turn — show QR
-      try {
-        const qrUrl = await qrcode.toDataURL(qr_link);
-        res.render('form-waiting', {
-          session_id: row.session_id,
-          qr_link: qrUrl,
-          qr_upi: qr_link,
-          amount: row.amount
+          const qrUrl = await qrcode.toDataURL(qr_link);
+          res.render('form-waiting', {
+            session_id: row.session_id,
+            qr_link: qrUrl,
+            qr_upi: qr_link,
+            amount: row.amount,
+            id
+          });
         });
-      } catch (err) {
-        console.error('QR generation failed:', err);
-        res.redirect('/failure');
-      }
     });
-  });
 });
 
-// Display success page
-app.get('/success/:id', (req, res) => {
-  msgdb.get("SELECT * FROM payments WHERE id = ?", [req.params.id], (err, row) => {
-    if (!row || row.status !== 'success') return res.redirect('/failure');
-    res.render('success', { payment: row });
-  });
-});
-
-// Display failure page
-app.get('/failure', (req, res) => {
-  res.render('failure');
-});
-
-
-// Handle incoming SMS
+// Mark payment success
 app.post('/payment', (req, res) => {
   const message = req.body.message;
   const amountMatch = message.match(/INR\s+(\d+)\.(\d{2})?/i);
-  const acctMatch = message.match(/a\/c\s+.*?(\d{4})/i); // last 4 digits
+  const acctMatch = message.match(/a\/c\s+.*?(\d{4})/i);
 
-  console.log("📩 Received SMS:", message);
-
-  if (!amountMatch || !acctMatch) {
-    return res.status(400).send("❌ Invalid SMS");
-  }
+  if (!amountMatch || !acctMatch) return res.status(400).send("❌ Invalid message");
 
   const amount = parseInt(amountMatch[1]);
   const acctLast4 = acctMatch[1];
 
   const now = new Date();
-  const istOffsetMs = 5.5 * 60 * 60 * 1000;
-  const istNow = new Date(now.getTime() + istOffsetMs);
-  const fourMinAgo = new Date(istNow.getTime() - 4 * 60 * 1000);
+  const fourMinAgo = new Date(now.getTime() - 4 * 60 * 1000);
   const formattedTime = fourMinAgo.toISOString().replace('T', ' ').split('.')[0];
 
-  console.log("⏱️ IST now:", istNow.toLocaleString(), "| Auto-fail if before:", formattedTime);
+  msgdb.run(`UPDATE payments SET status = 'failed' WHERE status = 'pending' AND created_at <= ?`, [formattedTime]);
 
-  // Auto-fail old pending payments
-  msgdb.run(`
-    UPDATE payments
-    SET status = 'failed'
-    WHERE status = 'pending' AND created_at <= ?
-  `, [formattedTime], (failErr) => {
-    if (failErr) console.error("❌ Auto-fail error:", failErr);
+  msgdb.get(`SELECT p.id FROM payments p JOIN qr_codes q ON p.qr_id = q.qr_id WHERE p.amount = ? AND p.status = 'pending' AND q.account_last4 = ? ORDER BY p.created_at ASC LIMIT 1`,
+    [amount, acctLast4], (err, row) => {
+      if (!row) return res.send("⚠️ No match");
 
-    // Try to match this payment
-    msgdb.get(`
-      SELECT p.id FROM payments p
-      JOIN qr_codes q ON p.qr_id = q.qr_id
-      WHERE p.amount = ? AND p.status = 'pending' AND q.account_last4 = ?
-      ORDER BY p.created_at ASC LIMIT 1
-    `, [amount, acctLast4], (err, row) => {
-      if (err) return res.status(500).send("DB error");
-
-      if (row) {
-        msgdb.run(`
-          UPDATE payments
-          SET status = 'success', created_at = CURRENT_TIMESTAMP
-          WHERE id = ?
-        `, [row.id], (updateErr) => {
-          if (updateErr) return res.status(500).send("Update error");
-          res.send("✅ Payment matched & marked successful");
-        });
-      } else {
-        res.send("⚠️ No matching pending payment found");
-      }
+      msgdb.run(`UPDATE payments SET status = 'success', created_at = CURRENT_TIMESTAMP WHERE id = ?`, [row.id], (err) => {
+        if (!err) emitPaymentUpdate(row.id, 'success');
+        res.send("✅ Payment matched");
+      });
     });
-  });
 });
-
-// Auto-fail checker every 4 minutes
-setInterval(() => {
-  const now = new Date();
-  const istNow = new Date(now.getTime() + 5.5 * 60 * 60 * 1000);
-  const fourMinAgo = new Date(istNow.getTime() - 4 * 60 * 1000);
-  const formattedTime = fourMinAgo.toISOString().replace('T', ' ').split('.')[0];
-
-  msgdb.run(`
-    UPDATE payments
-    SET status = 'failed'
-    WHERE status = 'pending' AND created_at <= ?
-  `, [formattedTime], (err) => {
-    if (err) console.error("⏱️ Auto-fail interval error:", err);
-  });
-}, 4 * 60 * 1000);
-
 
 const sites = [
   "https://pnbagent.glitch.me"
