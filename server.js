@@ -228,7 +228,7 @@ app.get('/failure', (req, res) => {
   res.render('failure');
 });
 
-console.log(new Date())
+
 // Handle incoming SMS
 app.post('/payment', (req, res) => {
   const message = req.body.message;
