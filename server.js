@@ -139,32 +139,24 @@ app.post('/form', (req, res) => {
     if (err) return res.send('❌ DB error');
 
     if (existing) {
-      // Same amount already in progress — wait
       return res.redirect(`/form-waiting/${existing.id}`);
     }
 
-    // No same-amount pending — allow assigning new QR
-    msgdb.all(`SELECT * FROM qr_codes`, [], (err, allQrs) => {
-      if (err) return res.send('QR load error');
+    // No pending for this amount — assign QR1
+    msgdb.get(`SELECT * FROM qr_codes WHERE qr_id = 'QR1'`, [], (err, qrRow) => {
+      if (err || !qrRow) return res.send('❌ QR not found');
 
-      // Optional: skip QR already in use (for safety)
-      msgdb.all(`SELECT qr_id FROM payments WHERE status = 'pending'`, [], (err, usedQrs) => {
-        const usedQrIds = usedQrs.map(r => r.qr_id);
-        const availableQr = allQrs.find(qr => !usedQrIds.includes(qr.qr_id));
-        if (!availableQr) return res.send('❌ No QR available now, try again.');
-
-        // Save new payment
-        msgdb.run(`
-          INSERT INTO payments (qr_id, session_id, amount) 
-          VALUES (?, ?, ?)
-        `, [availableQr.qr_id, session_id, amount], function (err) {
-          if (err) return res.send('❌ DB insert error');
-          res.redirect(`/form-waiting/${this.lastID}`);
-        });
+      msgdb.run(`
+        INSERT INTO payments (qr_id, session_id, amount) 
+        VALUES (?, ?, ?)
+      `, [qrRow.qr_id, session_id, amount], function (err) {
+        if (err) return res.send('❌ DB insert error');
+        res.redirect(`/form-waiting/${this.lastID}`);
       });
     });
   });
 });
+
 
 // Display waiting page with QR code
 app.get('/form-waiting/:id', (req, res) => {
