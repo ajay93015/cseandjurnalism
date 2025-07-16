@@ -1,0 +1,132 @@
+<%-include("header")-%>
+  
+  
+  <style>
+  /* General styles */
+#result {
+    background-color: aliceblue;
+    color: black;
+    width: 90vw;
+    margin: auto;
+    padding: 5px;
+}
+
+/* Widget styles */
+.widget {
+    border: 1px solid #454545;
+    border-radius: 5px;
+    background: #EFEFEF;
+    padding: 10px;
+}
+
+.widget-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #ddd;
+    padding: 10px;
+    font-weight: bold;
+}
+
+.widget-head img {
+    margin-right: 10px;
+    height: 40px;
+    width: 40px;
+}
+
+.widget-content {
+    padding: 10px;
+}
+
+/* Table styles */
+.table-responsive {
+    overflow-x: auto;
+    width: 100%;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    border: 1px solid #454545;
+}
+
+td, th {
+    border: 1px solid #454545;
+    padding: 8px;
+    text-align: center;
+}
+
+/* Typography */
+.font-large {
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+.font-medium {
+    font-size: 1rem;
+}
+
+/* Mobile Optimization */
+@media (max-width: 768px) {
+    #result {
+        width: 95vw;
+        padding: 10px;
+    }
+    .widget-head {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+    .widget-head img {
+        margin-bottom: 10px;
+    }
+    table {
+        font-size: 0.9rem;
+    }
+    td, th {
+        padding: 5px;
+    }
+}
+
+  </style>
+  <%if(roll_n != undefined){%>
+<div style="    background-color: aliceblue;
+    color: black;
+    width: 90vw;
+    margin: auto;
+    padding: 5px;"id="result"></div>
+<script>
+let formData = new URLSearchParams();
+    formData.append("exam_name", "1401CN!BACHELOR OF COMPUTER APPLICATIONS (B.C.A.) SEMESTER-I (CBCS)");
+    formData.append("roll_number", <%=roll_n.roll_n%>);
+
+    fetch("/proxy", { // Proxy instead of blocked server
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: formData.toString()
+    })
+    .then(response => response.text())
+    .then(data => document.getElementById("result").innerHTML = data)
+  .then(data => document.getElementsByClassName("pull-left")[0].innerHTML=`<img src="https://cdn.glitch.global/e27d0e39-571f-4dec-9cfd-8dbbb8c32a30/index2.png" style="margin-right:10px;" height="40" width="40">
+					Makhanlal Chaturvedi National University of Journalism and Communication, <b>Bhopal</b>`)
+  /*
+  .then(data => {
+    let resultElement = document.getElementById("result");
+    resultElement.innerHTML = resultElement.innerHTML.replace(
+        /<link rel="stylesheet" href="https:\/\/maxcdn.bootstrapcdn.com\/bootstrap\/3.3.7\/css\/bootstrap.min.css">/g, 
+        ''
+    );});*/
+  
+      .then(data =>document.getElementById("result").innerHTML=document.getElementsByClassName('content')[0].innerHTML)
+
+
+  
+</script>
+  
+    <%}else{%><div style="margin:auto;width:60%;background-color:whitesmoke;color:lightskyblue;margin-top-bottom:2%;text-align:center;margin-bottom:2%;border-radius:5px;">
+      <form action method="post">
+      <h1>Roll No</h1>
+      <Select name="Pref"><option>BCA 1st</option></Select>
+      <input placeholder="Enter Your Roll No"type="text" name="roll_n"><input class="btn" type="submit">
+      </div><%}%>
+<%-include("footer")-%>

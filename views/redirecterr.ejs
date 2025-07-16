@@ -1,0 +1,14 @@
+<%-include('header')-%>
+<style>body{background-image:;}</style><center>csandjurnalism.glitch.me<%=req%></br> <hr>Page Not Found<body onload="startRedirect()">
+    Redirecting in 3 seconds...
+    <p>If you are not redirected, <a href="/">click here</a>.</p>
+</body><hr></center>   <script>
+        // Function to start the 3-second timer
+        function startRedirect() {
+            setTimeout(function() {
+                // Redirect to the home page ("/")
+                window.location.href = "/";
+            }, 3000);
+        }
+    </script>
+<%-include('footer')-%>

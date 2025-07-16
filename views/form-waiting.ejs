@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Waiting for Payment</title>
+  <meta http-equiv="refresh" content="5">
+</head>
+<body>
+  <h2>Waiting for payment...</h2>
+  
+  <p>Auto-refreshing... Please complete the payment.</p>
+  <h2>Scan and Pay</h2>
+  <h2>Waiting for payment...</h2>
+<p>Session ID: <%= session_id %></p>
+<p>Scan QR below:</p>
+
+<p>Session ID: <%= session_id %></p>
+
+<img src="<%= qr_link %>" />
+
+<p>or use UPI: <strong><%= qr_upi %></strong></p>
+</body>
+</html>

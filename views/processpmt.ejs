@@ -1,0 +1,34 @@
+<%-include("header")-%>
+<html>
+<head>
+  <title>Scan to Pay</title>
+  <style>
+    body { text-align: center; font-family: Arial; padding-top: 50px; }
+    img { width: 250px; height: 250px; }
+  </style>
+</head>
+<body>
+  <h1>Scan to Pay ₹<%= amount %></h1>
+  <img src="/your-upi-qr.png" alt="UPI QR Code">
+  <p>Waiting for payment confirmation...</p>
+
+  <script>
+    const amount = "<%= amount %>";
+    const refId = "<%= refId %>"; // secure session/token (optional)
+
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(`/verify/${amount}`);
+        const data = await res.json();
+        if (data.success) {
+          clearInterval(interval);
+          window.location.href = '/success?'+amount;
+        }
+      } catch (err) {
+        console.error('Error checking payment:', err);
+      }
+    }, 3000); // every 3 seconds
+  </script>
+</body>
+</html>
+<%-include("footer")-%>
