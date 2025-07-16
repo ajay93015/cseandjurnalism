@@ -130,19 +130,20 @@ app.get('/form', (req, res) => {
 app.post('/form', (req, res) => {
   const { session_id, amount } = req.body;
 
-  // Only block if same amount is already pending
+  // Check if QR1 is in use for any pending payment
   msgdb.get(`
     SELECT * FROM payments 
-    WHERE amount = ? AND status = 'pending'
+    WHERE qr_id = 'QR1' AND status = 'pending'
     ORDER BY created_at ASC LIMIT 1
-  `, [amount], (err, existing) => {
+  `, (err, pendingQR1) => {
     if (err) return res.send('❌ DB error');
 
-    if (existing) {
-      return res.redirect(`/form-waiting/${existing.id}`);
+    if (pendingQR1) {
+      // QR1 is in use — redirect to wait on existing one
+      return res.redirect(`/form-waiting/${pendingQR1.id}`);
     }
 
-    // No pending for this amount — assign QR1
+    // QR1 is free — allow new assignment
     msgdb.get(`SELECT * FROM qr_codes WHERE qr_id = 'QR1'`, [], (err, qrRow) => {
       if (err || !qrRow) return res.send('❌ QR not found');
 
@@ -156,7 +157,6 @@ app.post('/form', (req, res) => {
     });
   });
 });
-
 
 // Display waiting page with QR code
 app.get('/form-waiting/:id', (req, res) => {
