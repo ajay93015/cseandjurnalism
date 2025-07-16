@@ -14,6 +14,8 @@ const sessions = require('express-session');
 app.use(bodyParser.urlencoded({ extended: true }));
 const qrcode = require('qrcode');
 const socketIo = require('socket.io');
+const server = http.createServer(app);
+const io = socketIo(server);
 
 app.use(sessions({
     secret: 'K0201508',
