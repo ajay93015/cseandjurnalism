@@ -1,22 +1,29 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Waiting for Payment</title>
-  <meta http-equiv="refresh" content="5">
-</head>
-<body>
-  <h2>Waiting for payment...</h2>
-  
-  <p>Auto-refreshing... Please complete the payment.</p>
-  <h2>Scan and Pay</h2>
-  <h2>Waiting for payment...</h2>
-<p>Session ID: <%= session_id %></p>
-<p>Scan QR below:</p>
+<h2>Payment Queue</h2>
 
-<p>Session ID: <%= session_id %></p>
+<% if (qr_link) { %>
+  <p>✅ Your turn! Please scan and pay:</p>
+  <img src="<%= qr_link %>" alt="QR Code">
+  <p>UPI: <%= qr_upi %></p>
+<% } else { %>
+  <p>🚦 Someone else is paying ₹<%= amount %>. Please wait for your turn.</p>
+  <p>⏱️ This page will refresh automatically after <span id="timer">05:00</span></p>
 
-<img src="<%= qr_link %>" />
+  <script>
+    let seconds = 300;
+    const timerEl = document.getElementById("timer");
 
-<p>or use UPI: <strong><%= qr_upi %></strong></p>
-</body>
-</html>
+    function updateTimer() {
+      let min = Math.floor(seconds / 60);
+      let sec = seconds % 60;
+      timerEl.textContent = `${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+      if (seconds > 0) {
+        seconds--;
+        setTimeout(updateTimer, 1000);
+      } else {
+        location.reload(); // ⟳ Refresh after 5 minutes
+      }
+    }
+
+    updateTimer();
+  </script>
+<% } %>
