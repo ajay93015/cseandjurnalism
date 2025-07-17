@@ -8,6 +8,8 @@
   <p>🚦 Someone else is paying ₹<%= amount %>. Please wait for your turn.</p>
   <p>⏱️ This page will refresh automatically after <span id="timer">05:00</span></p>
 
+<% } %>
+
   <script src="/socket.io/socket.io.js"></script>
   <script>
     const socket = io();
@@ -36,4 +38,3 @@
       }
     }, 1000);
   </script>
-<% } %>
