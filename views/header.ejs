@@ -1009,7 +1009,7 @@
             <!-- Desktop Navigation -->
             <ul class="nav-menu">
                 
-                <%if(user === ""){%><li><%=user.name%></li>
+                <%if(user.name != undefined){%><li><%=user.name%></li>
                 <li><a class="activee" href="/logout">Log-Out</a></li>
 
 
@@ -1068,7 +1068,7 @@
             <p>Barhi, Madhya Pradesh</p>
         </div>
         <ul class="side-nav-menu">
-                <%if(user === ""){%><li><%=user.name%></li>
+                <%if(user.name != undefined){%><li><%=user.name%></li>
                 <li><a class="activee" href="/logout">Log-Out</a></li>
 
 
