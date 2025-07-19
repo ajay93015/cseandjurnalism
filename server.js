@@ -9,7 +9,7 @@ const path = require('path');
 const cors = require('cors');
 const request = require("request");
 app.use(cors());
-const bodyParser = require("body-parser")
+const bodyParser = require("body-parser");
 const sessions = require('express-session');
 app.use(bodyParser.urlencoded({ extended: true }));
 const qrcode = require('qrcode');
@@ -305,11 +305,11 @@ async function generateQR() {
 }
 
 //generateQR();
-
-app.get('/', renderPage('home'));
-app.get('/gallery', renderPage('gallery'));
-app.get('/login', renderPage('login', { name: '', title: 'Login', menu: 'login',error:undefined }));
-app.get('/result',renderPage('result',{roll_n:undefined}));
+const user = (!req.session.user)?"null":req.session.user;
+app.get('/', renderPage('home',{user:user}));
+app.get('/gallery', renderPage('gallery',{user:user}));
+app.get('/login', renderPage('login', { name: '', title: 'Login', menu: 'login',error:undefined,user:user }));
+app.get('/result',renderPage('result',{roll_n:undefined,user:user}));
 
 app.get('/dashboard', (req, res) => {
     if (!req.session.user) {
