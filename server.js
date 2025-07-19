@@ -79,12 +79,18 @@ function isAuth(req, res, next) {
   next();
 }
 const renderPage = (page, options = {}) => (req, res) => {
-  const user = req.session.user || undefined;
-
+  if(!req.session.user){
   res.render(page, {
     ...options,
-    user  // pass user to template
+    user:undefined  // pass user to template
   });
+  }else{
+      
+  res.render(page, {
+    ...options,
+    user:req.session.user  // pass user to template
+  });
+  }
 };
 
 
