@@ -78,7 +78,14 @@ function isAuth(req, res, next) {
     //next(); // Allow access to next middleware or route
   next();
 }
-const renderPage = (page, options = {}) => (req, res) => res.render(page, options);
+const renderPage = (page, options = {}) => (req, res) => {
+  const user = req.session.user || null;
+
+  res.render(page, {
+    ...options,
+    user  // pass user to template
+  });
+};
 
 
 const msgdb = new sqlite3.Database('payments.db');
@@ -305,11 +312,11 @@ async function generateQR() {
 }
 
 //generateQR();
-const user = (!req.session.user)?"null":req.session.user;
-app.get('/', renderPage('home',{user:user}));
-app.get('/gallery', renderPage('gallery',{user:user}));
-app.get('/login', renderPage('login', { name: '', title: 'Login', menu: 'login',error:undefined,user:user }));
-app.get('/result',renderPage('result',{roll_n:undefined,user:user}));
+
+app.get('/', renderPage('home'));
+app.get('/gallery', renderPage('gallery'));
+app.get('/login', renderPage('login', { name: '', title: 'Login', menu: 'login',error:undefined,}));
+app.get('/result',renderPage('result',{roll_n:undefined}));
 
 app.get('/dashboard', (req, res) => {
     if (!req.session.user) {
