@@ -78,20 +78,15 @@ function isAuth(req, res, next) {
     //next(); // Allow access to next middleware or route
   next();
 }
+
 const renderPage = (page, options = {}) => (req, res) => {
-  if(!req.session.user){
+  const user = req.session?.user || undefined;
   res.render(page, {
     ...options,
-    user:undefined  // pass user to template
+    user // pass user to template
   });
-  }else{
-      
-  res.render(page, {
-    ...options,
-    user:req.session.user  // pass user to template
-  });
-  }
 };
+
 
 
 const msgdb = new sqlite3.Database('payments.db');
