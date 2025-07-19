@@ -79,7 +79,7 @@ function isAuth(req, res, next) {
   next();
 }
 const renderPage = (page, options = {}) => (req, res) => {
-  const user = (!req.session.user)?"":req.session.user;
+  const user = req.session.user || undefined;
 
   res.render(page, {
     ...options,
