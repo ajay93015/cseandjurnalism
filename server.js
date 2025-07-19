@@ -307,7 +307,7 @@ async function generateQR() {
 //generateQR();
 
 app.get('/', renderPage('home'));
-app.get('/', renderPage('gallery'));
+app.get('/gallery', renderPage('gallery'));
 app.get('/login', renderPage('login', { name: '', title: 'Login', menu: 'login',error:undefined }));
 app.get('/result',renderPage('result',{roll_n:undefined}));
 
