@@ -1031,8 +1031,13 @@
                 <li><a href="#placements">Placements</a></li>
                 <li><a href="/gallery">Gallery</a></li>
                 <li><a href="#contact">Contact</a></li>
+
+                <%if(user != null){%><li><%=user.name%></li>
+                <li><a class="activee" href="/logout">Log-Out</a></li>
+                <%}else{%>
                 <li><a class="activee" href="/login">Log-in</a></li>
                 <li><a class="activee" href="/signup">Sign-Up</a></li>
+                <%}%>
             </ul>
 
             <!-- Hamburger Menu Button -->
