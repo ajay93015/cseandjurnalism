@@ -154,6 +154,143 @@ app.get('/form', (req, res) => {
   res.render('form');
 });
 
+app.get('/signup', (req, res) => {
+  res.render('signup', { error: null, success: null });
+});
+
+// POST - Handle signup form submission
+app.post('/signup', async (req, res) => {
+  const {
+      rollno,
+      name,
+      application_no,
+      fathername,
+      mothername,
+      mobileno,
+      other1,
+      other2,
+      other3,
+      other4,
+      other5,
+      other6,
+      other7,
+      other8
+  } = req.body;
+
+  // Server-side validation
+  const errors = [];
+
+  if (!rollno || rollno.trim() === '') {
+      errors.push({ field: 'rollno', message: 'Roll number is required' });
+  }
+
+  if (!name || name.trim() === '') {
+      errors.push({ field: 'name', message: 'Name is required' });
+  }
+
+  if (!application_no || application_no.trim() === '') {
+      errors.push({ field: 'application_no', message: 'Application number is required' });
+  }
+
+  if (!fathername || fathername.trim() === '') {
+      errors.push({ field: 'fathername', message: 'Father\'s name is required' });
+  }
+
+  if (!mothername || mothername.trim() === '') {
+      errors.push({ field: 'mothername', message: 'Mother\'s name is required' });
+  }
+
+  if (!mobileno || mobileno.trim() === '' || !/^[0-9]{10}$/.test(mobileno)) {
+      errors.push({ field: 'mobileno', message: 'Valid 10-digit mobile number is required' });
+  }
+
+  // If validation errors, return them
+  if (errors.length > 0) {
+      return res.status(400).json({
+          success: false,
+          message: 'Validation failed',
+          errors: errors
+      });
+  }
+
+  // Check for duplicate roll number or application number
+  const checkDuplicateQuery = `
+      SELECT rollno, application_no FROM student 
+      WHERE rollno = ? OR application_no = ?
+  `;
+
+  db.get(checkDuplicateQuery, [rollno.trim(), application_no.trim()], (err, row) => {
+      if (err) {
+          console.error('Database error:', err);
+          return res.status(500).json({
+              success: false,
+              message: 'Database error occurred'
+          });
+      }
+
+      if (row) {
+          let duplicateField = '';
+          if (row.rollno === rollno.trim()) {
+              duplicateField = 'Roll number';
+          } else if (row.application_no === application_no.trim()) {
+              duplicateField = 'Application number';
+          }
+
+          return res.status(400).json({
+              success: false,
+              message: `${duplicateField} already exists`,
+              errors: [{
+                  field: duplicateField === 'Roll number' ? 'rollno' : 'application_no',
+                  message: `${duplicateField} already exists`
+              }]
+          });
+      }
+
+      // Insert new student
+      const insertQuery = `
+          INSERT INTO student (
+              rollno, name, application_no, fathername, mothername, 
+              mobileno, other1, other2, other3, other4, other5, 
+              other6, other7, other8
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `;
+
+      const values = [
+          rollno.trim(),
+          name.trim(),
+          application_no.trim(),
+          fathername.trim(),
+          mothername.trim(),
+          mobileno.trim(),
+          other1?.trim() || null,
+          other2?.trim() || null,
+          other3?.trim() || null,
+          other4?.trim() || null,
+          other5?.trim() || null,
+          other6?.trim() || null,
+          other7?.trim() || null,
+          other8?.trim() || null
+      ];
+
+      db.run(insertQuery, values, function(err) {
+          if (err) {
+              console.error('Insert error:', err);
+              return res.status(500).json({
+                  success: false,
+                  message: 'Failed to register student'
+              });
+          }
+
+          // Success response
+          res.status(201).json({
+              success: true,
+              message: 'Student registered successfully',
+              studentId: this.lastID
+          });
+      });
+  });
+});
+
 app.post('/form', (req, res) => {
   const { session_id, amount } = req.body;
 
