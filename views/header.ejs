@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <title>Makhanlal Chaturvedi National University of Journalism and Communication ,Bhopal</title>
    <style>
         * {
@@ -422,7 +423,7 @@
 
         .btn-secondary {
             background: transparent;
-            color: white;
+            color: rgb(47, 184, 238);
             border: 2px solid white;
         }
 
@@ -1009,8 +1010,48 @@
             <!-- Desktop Navigation -->
             <ul class="nav-menu">
                 
-                <%if(typeof user!== 'undefined'){%><li><%=user.name%></li>
-                <li><a class="activee" href="/logout">Log-Out</a></li>
+                <%if(typeof user!== 'undefined'){%>
+                <li><a href="/dashboard">🏠 Home</a></li>
+                
+                <li class="dropdown">
+                    <a href="#fees">📄 Fee</a>
+                    <div class="dropdown-content">
+                        <a href="/fee">Installment Repayment</a>
+                        <a href="/fee-status">Payment Status</a>
+                        <a href="/fee-few">Last 10 Details</a>
+                        <a href="/fee-all">All Installments Detail</a>
+                    </div>
+                </li>
+                <li class="dropdown">
+                    <a href="#fees">✍🏻 Student Services</a>
+                    <div class="dropdown-content">
+                        <a href="/req">Identity Card</a>
+                        <a href="/admitcard">Admit Card</a>
+                        <a href="/Result">Result</a>
+                        <a href="/Academic ">Academic Score</a>
+                    </div>
+                </li>
+                <li><a href="/TermsAndConditions"><i class="fa fa-lock" ></i> T&C</a></li>
+                <li style="position:relative; display:inline-block;">
+                    <a href="javascript:void(0);">🏫 <%= user.name %>
+                    </a>
+                    <div style="display:none; position:absolute; right:0; background-color:#fff; min-width:160px; border:1px solid #ccc; border-radius:6px; box-shadow:0px 8px 16px rgba(0,0,0,0.15); z-index:1000;"
+                         onmouseover="this.style.display='block'" 
+                         onmouseout="this.style.display='none'">
+                      <a href="/profile" style="color:#333; padding:10px 16px; text-decoration:none; display:block; font-size:14px;">👤 Profile</a>
+                      <a href="/logout" style="color:#333; padding:10px 16px; text-decoration:none; display:block; font-size:14px;">🚪 Log Out</a>
+                    </div>
+                    <script>
+                      const dropdown = document.currentScript.parentElement;
+                      const link = dropdown.querySelector('a');
+                      const content = dropdown.querySelector('div');
+              
+                      link.addEventListener('mouseover', () => content.style.display = 'block');
+                      link.addEventListener('mouseout', () => content.style.display = 'none');
+                      content.addEventListener('mouseover', () => content.style.display = 'block');
+                      content.addEventListener('mouseout', () => content.style.display = 'none');
+                    </script>
+                  </li>
 
 
 
@@ -1018,7 +1059,7 @@
 
 
 
-                <li><a href="#home">Home</a></li>
+                <li><a href="/">Home</a></li>
                 <li class="dropdown">
                     <a href="#courses">Courses</a>
                     <div class="dropdown-content">
@@ -1058,7 +1099,7 @@
 
     <!-- Side Navigation -->
     <div class="side-nav" id="sideNav">
-      <div class="hamburger-menu active" onclick="closeSideNav()" style="align-items:end;" id="hamburgerMenu">
+      <div class="hamburger-menu active" onclick="closeSideNav()" style="float:right;" id="hamburgerMenu">
                 <span></span>
                 <span></span>
                 <span></span>
@@ -1068,8 +1109,39 @@
             <p>Barhi, Madhya Pradesh</p>
         </div>
         <ul class="side-nav-menu">
-                <%if(typeof user!== 'undefined'){%><li><%=user.name%></li>
-                <li><a class="activee" href="/logout">Log-Out</a></li>
+                <%if(typeof user!== 'undefined'){%>
+
+                    <li><a href="/dashboard">🏠 Home</a></li>
+                
+                <li >
+                <div class="dropdown-toggle" onclick="toggleDropdown(this)">
+
+                    <a href="#fees">📄 Fee</a></div>
+                        <ul class="side-nav-submenu">
+                        <a href="/fee">Installment Repayment</a>
+                        <a href="/fee-status">Payment Status</a>
+                        <a href="/fee-few">Last 10 Details</a>
+                        <a href="/fee-all">All Installments Detail</a>
+                    </ul>
+                </li>
+                <li >
+                <div class="dropdown-toggle" onclick="toggleDropdown(this)">
+                    <a href="#fees">✍🏻 Student Services</a></div>
+                    <ul class="side-nav-submenu">
+                        <a href="/req">Identity Card</a>
+                        <a href="/admitcard">Admit Card</a>
+                        <a href="/Result">Result</a>
+                        <a href="/Academic ">Academic Score</a>
+                    </ul>
+                </li>
+                
+                    <div class="dropdown-toggle" onclick="toggleDropdown(this)">
+                        <a href="javascript:void(0)"><%= user.name %></a>
+                    </div>
+                        <ul class="side-nav-submenu">
+                          <a href="/profile">👤 Profile</a>
+                          <a href="/logout">🚪 Log Out</a>
+                        </ul>
 
 
 
