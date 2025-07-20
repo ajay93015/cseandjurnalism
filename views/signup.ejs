@@ -1,0 +1,477 @@
+<%-include("header")-%>
+
+    <title>Student Registration</title>
+    <style>
+     
+
+        .signup-container {
+            justify-self: anchor-center;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            width: 100%;
+            max-width: 800px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .signup-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .signup-header h1 {
+            color: #333;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .signup-header p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            position: relative;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .form-group label {
+            display: block;
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 15px 18px;
+            border: 2px solid #e1e5e9;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .form-group.error input,
+        .form-group.error select {
+            border-color: #ff4757;
+            box-shadow: 0 0 0 3px rgba(255, 71, 87, 0.1);
+        }
+
+        .error-message {
+            color: #ff4757;
+            font-size: 0.85rem;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        .required {
+            color: #ff4757;
+        }
+
+        .additional-fields {
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 2px solid #f0f0f0;
+        }
+
+        .additional-fields h3 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.2rem;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .submit-btn:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(102, 126, 234, 0.4);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .submit-btn .loader {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top: 2px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .success-message {
+            background: rgba(46, 204, 113, 0.1);
+            border: 2px solid #2ecc71;
+            color: #27ae60;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: none;
+            text-align: center;
+        }
+
+        .login-link {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e1e5e9;
+        }
+
+        .login-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s ease;
+        }
+
+        .login-link a:hover {
+            color: #764ba2;
+        }
+
+        @media (max-width: 768px) {
+            .signup-container {
+                padding: 30px 20px;
+                margin: 10px;
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .signup-header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="signup-container">
+        <div class="signup-header">
+            <h1>Student Registration</h1>
+            <p>Create your student account to get started</p>
+        </div>
+
+        <div class="success-message" id="successMessage">
+            Registration successful! You can now login with your credentials.
+        </div>
+
+        <form id="signupForm" method="POST" action="/signup">
+            <!-- Basic Information -->
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="rollno">Roll Number <span class="required">*</span></label>
+                    <input type="text" id="rollno" name="rollno" required>
+                    <div class="error-message" id="rollnoError">Roll number is required</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="name">Full Name <span class="required">*</span></label>
+                    <input type="text" id="name" name="name" required>
+                    <div class="error-message" id="nameError">Full name is required</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="application_no">Application Number <span class="required">*</span></label>
+                    <input type="text" id="application_no" name="application_no" required>
+                    <div class="error-message" id="application_noError">Application number is required</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="mobileno">Mobile Number <span class="required">*</span></label>
+                    <input type="tel" id="mobileno" name="mobileno" pattern="[0-9]{10}" maxlength="10" required>
+                    <div class="error-message" id="mobilenoError">Valid 10-digit mobile number is required</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="fathername">Father's Name <span class="required">*</span></label>
+                    <input type="text" id="fathername" name="fathername" required>
+                    <div class="error-message" id="fathernameError">Father's name is required</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="mothername">Mother's Name <span class="required">*</span></label>
+                    <input type="text" id="mothername" name="mothername" required>
+                    <div class="error-message" id="mothernameError">Mother's name is required</div>
+                </div>
+            </div>
+
+            <!-- Additional Information -->
+            <div class="additional-fields">
+                <h3>Additional Information (Optional)</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="other1">Email Address</label>
+                        <input type="email" id="other1" name="other1" placeholder="student@example.com">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="other2">Date of Birth</label>
+                        <input type="date" id="other2" name="other2">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="other3">Course</label>
+                        <select id="other3" name="other3">
+                            <option value="">Select Course</option>
+                            <option value="BCA">BCA Computer Science</option>
+                            <option value="BA-Journalism">B.A Journalism</option>
+                            <option value="Diploma">Diploma Courses</option>
+                            <option value="Certificate">Certificate Programs</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="other4">Gender</label>
+                        <select id="other4" name="other4">
+                            <option value="">Select Gender</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label for="other5">Address</label>
+                        <textarea id="other5" name="other5" rows="3" placeholder="Enter your full address"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="other6">City</label>
+                        <input type="text" id="other6" name="other6" placeholder="City">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="other7">State</label>
+                        <input type="text" id="other7" name="other7" placeholder="State">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="other8">Pincode</label>
+                        <input type="text" id="other8" name="other8" pattern="[0-9]{6}" maxlength="6" placeholder="123456">
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="submit-btn" id="submitBtn">
+                <div class="loader" id="loader"></div>
+                <span id="submitText">Create Account</span>
+            </button>
+        </form>
+
+        <div class="login-link">
+            <p>Already have an account? <a href="/login">Sign in here</a></p>
+        </div>
+    </div>
+
+    <script>
+        // Form validation and submission
+        document.getElementById('signupForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            // Clear previous errors
+            clearErrors();
+            
+            if (!validateForm()) {
+                return;
+            }
+
+            const submitBtn = document.getElementById('submitBtn');
+            const loader = document.getElementById('loader');
+            const submitText = document.getElementById('submitText');
+            
+            // Show loading state
+            submitBtn.disabled = true;
+            loader.style.display = 'inline-block';
+            submitText.textContent = 'Creating Account...';
+
+            try {
+                const formData = new FormData(this);
+                
+                const response = await fetch('/signup', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    // Show success message
+                    document.getElementById('successMessage').style.display = 'block';
+                    this.reset(); // Clear form
+                    
+                    // Scroll to top to show success message
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                    
+                    // Optional: Redirect after 3 seconds
+                    setTimeout(() => {
+                        window.location.href = '/login';
+                    }, 3000);
+                } else {
+                    // Handle server errors
+                    if (result.errors && Array.isArray(result.errors)) {
+                        displayServerErrors(result.errors);
+                    } else {
+                        alert(result.message || 'Registration failed. Please try again.');
+                    }
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Network error. Please check your connection and try again.');
+            } finally {
+                // Reset button state
+                submitBtn.disabled = false;
+                loader.style.display = 'none';
+                submitText.textContent = 'Create Account';
+            }
+        });
+
+        function validateForm() {
+            const requiredFields = [
+                { id: 'rollno', message: 'Roll number is required' },
+                { id: 'name', message: 'Full name is required' },
+                { id: 'application_no', message: 'Application number is required' },
+                { id: 'fathername', message: 'Father\'s name is required' },
+                { id: 'mothername', message: 'Mother\'s name is required' },
+                { id: 'mobileno', message: 'Valid 10-digit mobile number is required' }
+            ];
+
+            let isValid = true;
+
+            requiredFields.forEach(field => {
+                const input = document.getElementById(field.id);
+                const value = input.value.trim();
+                
+                if (!value) {
+                    showFieldError(field.id, field.message);
+                    isValid = false;
+                } else if (field.id === 'mobileno' && !/^[0-9]{10}$/.test(value)) {
+                    showFieldError(field.id, 'Please enter a valid 10-digit mobile number');
+                    isValid = false;
+                }
+            });
+
+            // Validate optional email if provided
+            const emailInput = document.getElementById('other1');
+            if (emailInput.value.trim() && !isValidEmail(emailInput.value.trim())) {
+                showFieldError('other1', 'Please enter a valid email address');
+                isValid = false;
+            }
+
+            // Validate pincode if provided
+            const pincodeInput = document.getElementById('other8');
+            if (pincodeInput.value.trim() && !/^[0-9]{6}$/.test(pincodeInput.value.trim())) {
+                showFieldError('other8', 'Please enter a valid 6-digit pincode');
+                isValid = false;
+            }
+
+            return isValid;
+        }
+
+        function showFieldError(fieldId, message) {
+            const field = document.getElementById(fieldId);
+            const errorElement = document.getElementById(fieldId + 'Error');
+            
+            field.parentElement.classList.add('error');
+            errorElement.textContent = message;
+            errorElement.classList.add('show');
+        }
+
+        function clearErrors() {
+            document.querySelectorAll('.error-message').forEach(error => {
+                error.classList.remove('show');
+            });
+            document.querySelectorAll('.form-group').forEach(group => {
+                group.classList.remove('error');
+            });
+            document.getElementById('successMessage').style.display = 'none';
+        }
+
+        function displayServerErrors(errors) {
+            errors.forEach(error => {
+                if (error.field && document.getElementById(error.field)) {
+                    showFieldError(error.field, error.message);
+                }
+            });
+        }
+
+        function isValidEmail(email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email);
+        }
+
+        // Real-time validation for mobile number
+        document.getElementById('mobileno').addEventListener('input', function(e) {
+            this.value = this.value.replace(/\D/g, '').slice(0, 10);
+        });
+
+        // Real-time validation for pincode
+        document.getElementById('other8').addEventListener('input', function(e) {
+            this.value = this.value.replace(/\D/g, '').slice(0, 6);
+        });
+    </script>
+<%-include("footer")-%>
