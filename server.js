@@ -340,7 +340,7 @@ app.post('/payment', (req, res) => {
 });
 
 const sites = [
-  "https://pnbagent.glitch.me"
+  "https://csandjurnalism.onrender.com"
 ];
 
 const utcNow = new Date();
@@ -381,16 +381,16 @@ if (istHour >= 9 && istHour <= 19) {
   //  checkup();
 }
 
-/*    
+    
 // Ping every 4 minutes (less than Glitch's 5-minute sleep)
 setInterval(() => {
   sites.forEach(site => {
     axios.get(site)
        
-      .catch(err => console.log(`❌ Error pinging ${site}:`, err.message));
+      //.catch(err => console.log(`❌ Error pinging ${site}:`, err.message));
   });
-}, 240000); // every 4 minutes
-*/
+}, 49000); // every 4 minutes
+
 
 app.get("/ping", (req, res) => {
   
