@@ -177,41 +177,8 @@ app.post('/signup', async (req, res) => {
       other8
   } = req.body;
 
-  // Server-side validation
-  const errors = [];
+  
 
-  if (!rollno || rollno.trim() === '') {
-      errors.push({ field: 'rollno', message: 'Roll number is required' });
-  }
-
-  if (!name || name.trim() === '') {
-      errors.push({ field: 'name', message: 'Name is required' });
-  }
-
-  if (!application_no || application_no.trim() === '') {
-      errors.push({ field: 'application_no', message: 'Application number is required' });
-  }
-
-  if (!fathername || fathername.trim() === '') {
-      errors.push({ field: 'fathername', message: 'Father\'s name is required' });
-  }
-
-  if (!mothername || mothername.trim() === '') {
-      errors.push({ field: 'mothername', message: 'Mother\'s name is required' });
-  }
-
-  if (!mobileno || mobileno.trim() === '' || !/^[0-9]{10}$/.test(mobileno)) {
-      errors.push({ field: 'mobileno', message: 'Valid 10-digit mobile number is required' });
-  }
-
-  // If validation errors, return them
-  if (errors.length > 0) {
-      return res.status(400).json({
-          success: false,
-          message: 'Validation failed',
-          errors: errors
-      });
-  }
 
   // Check for duplicate roll number or application number
   const checkDuplicateQuery = `
