@@ -366,7 +366,7 @@ app.get('/gallery', renderPage('gallery'));
 app.get('/login', renderPage('login', { name: '', title: 'Login', menu: 'login',error:undefined,}));
 app.get('/result',renderPage('result',{roll_n:undefined}));
 app.get('/bca', renderPage('bca'));
-app.get('/ba-journalism', renderPage('ba'));
+app.get('/ba', renderPage('ba'));
 app.get('/diploma', renderPage('diploma'));
 app.get('/certificate', renderPage('certificate'));
 app.get('/apply', renderPage('apply'));
