@@ -454,7 +454,7 @@
             </div>
         </div>
 
-        <div class="login">
+        <form method="post" action="/login" class="login">
             <h2 class="login-title">Welcome Back</h2>
 <%if(error != undefined){%><%-error-%><%}%>
             <div class="input-group">
@@ -465,8 +465,8 @@
                 <input type="password" placeholder="Enter password" id="password">
                 <i class="fas fa-lock"></i>
             </div>
-            <button class="login-btn" type="button">Sign In</button>
-        </div>
+            <button onclick="submit()" class="login-btn" type="button">Sign In</button>
+        </form>
     </div>
 
     <script>
