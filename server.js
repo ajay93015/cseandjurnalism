@@ -154,107 +154,50 @@ app.get('/form', (req, res) => {
   res.render('form');
 });
 
+
 app.get('/signup', (req, res) => {
-  res.render('signup', { error: null, success: null });
+  res.render('signup');
 });
 
-// POST - Handle signup form submission
+// Handle Signup POST
 app.post('/signup', async (req, res) => {
   const {
-      rollno,
-      name,
-      application_no,
-      fathername,
-      mothername,
-      mobileno,
-      other1,
-      other2,
-      other3,
-      other4,
-      other5,
-      other6,
-      other7,
-      other8
+    rollno, name, application_no,
+    fathername, mothername, mobileno,
+    other1, other2, other3, other4,
+    other5, other6, other7, other8
   } = req.body;
 
-  
-
-
-  // Check for duplicate roll number or application number
-  const checkDuplicateQuery = `
-      SELECT rollno, application_no FROM student 
-      WHERE rollno = ? OR application_no = ?
+  const sql = `
+    INSERT INTO students (
+      rollno, name, application_no,
+      fathername, mothername, mobileno,
+      other1, other2, other3, other4,
+      other5, other6, other7, other8
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
-  db.get(checkDuplicateQuery, [rollno.trim(), application_no.trim()], (err, row) => {
-      if (err) {
-          console.error('Database error:', err);
-          return res.status(500).json({
-              success: false,
-              message: 'Database error occurred'
-          });
+  const values = [
+    rollno, name, application_no,
+    fathername, mothername, mobileno,
+    other1, other2, other3, other4,
+    other5, other6, other7, other8
+  ];
+
+  db.run(sql, values, function (err) {
+    if (err) {
+      return res.send('❌ Error inserting into database: ' + err.message);
+    }
+
+    res.render('success', {
+      user: {
+        id: this.lastID,
+        rollno, name, application_no,
+        fathername, mothername, mobileno,
+        other1, other2, other3, other4,
+        other5, other6, other7, other8
       }
-
-      if (row) {
-          let duplicateField = '';
-          if (row.rollno === rollno.trim()) {
-              duplicateField = 'Roll number';
-          } else if (row.application_no === application_no.trim()) {
-              duplicateField = 'Application number';
-          }
-
-          return res.status(400).json({
-              success: false,
-              message: `${duplicateField} already exists`,
-              errors: [{
-                  field: duplicateField === 'Roll number' ? 'rollno' : 'application_no',
-                  message: `${duplicateField} already exists`
-              }]
-          });
-      }
-
-      // Insert new student
-      const insertQuery = `
-          INSERT INTO student (
-              rollno, name, application_no, fathername, mothername, 
-              mobileno, other1, other2, other3, other4, other5, 
-              other6, other7, other8
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `;
-
-      const values = [
-          rollno.trim(),
-          name.trim(),
-          application_no.trim(),
-          fathername.trim(),
-          mothername.trim(),
-          mobileno.trim(),
-          other1?.trim() || null,
-          other2?.trim() || null,
-          other3?.trim() || null,
-          other4?.trim() || null,
-          other5?.trim() || null,
-          other6?.trim() || null,
-          other7?.trim() || null,
-          other8?.trim() || null
-      ];
-
-      db.run(insertQuery, values, function(err) {
-          if (err) {
-              console.error('Insert error:', err);
-              return res.status(500).json({
-                  success: false,
-                  message: 'Failed to register student'
-              });
-          }
-
-          // Success response
-          res.status(201).json({
-              success: true,
-              message: 'Student registered successfully',
-              studentId: this.lastID
-          });
-      });
+    });
   });
 });
 
