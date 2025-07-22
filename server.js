@@ -365,6 +365,16 @@ app.get('/', renderPage('home'));
 app.get('/gallery', renderPage('gallery'));
 app.get('/login', renderPage('login', { name: '', title: 'Login', menu: 'login',error:undefined,}));
 app.get('/result',renderPage('result',{roll_n:undefined}));
+app.get('/bca', renderPage('bca'));
+app.get('/ba-journalism', renderPage('ba'));
+app.get('/diploma', renderPage('diploma'));
+app.get('/certificate', renderPage('certificate'));
+app.get('/apply', renderPage('apply'));
+app.get('/eligibility', renderPage('eligibility'));
+app.get('/fees', renderPage('fees'));
+app.get('/scholarships', renderPage('scholarships'));
+app.get('/facilities', renderPage('facilities'));
+app.get('/contact', renderPage('contact'));
 
 app.get('/dashboard', (req, res) => {
     if (!req.session.user) {
