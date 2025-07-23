@@ -97,7 +97,7 @@ td, th {
     padding: 5px;"id="result"></div>
 <script>
 let formData = new URLSearchParams();
-    formData.append("exam_name", "1401CN!BACHELOR OF COMPUTER APPLICATIONS (B.C.A.) SEMESTER-I (CBCS)");
+    formData.append("exam_name", "1402CN!BACHELOR OF COMPUTER APPLICATIONS (B.C.A.) SEMESTER-II (CBCS)");
     formData.append("roll_number", <%=roll_n.roll_n%>);
 
     fetch("/proxy", { // Proxy instead of blocked server
@@ -126,7 +126,7 @@ let formData = new URLSearchParams();
     <%}else{%><div style="margin:auto;width:60%;background-color:whitesmoke;color:lightskyblue;margin-top-bottom:2%;text-align:center;margin-bottom:2%;border-radius:5px;">
       <form action method="post">
       <h1>Roll No</h1>
-      <Select name="Pref"><option>BCA 1st</option></Select>
+      <Select name="Pref"><option>BCA SEMESTER-II</option></Select>
       <input placeholder="Enter Your Roll No"type="text" name="roll_n"><input class="btn" type="submit">
       </div><%}%>
 <%-include("footer")-%>
