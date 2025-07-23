@@ -414,7 +414,7 @@ app.post('/login', (req, res) => {
 
 app.post("/proxy", (req, res) => {
     request.post({
-        url: "http://103.12.1.55:81/mkhu_dec_2024_results_1224/resultdisplay.php",
+        url: "http://103.12.1.55:81/mkhu_jun_2025_results_0625/resultdisplay.php",
         form: req.body
     }).pipe(res);
 });
