@@ -1061,6 +1061,12 @@
 
 
                 <li><a href="/">Home</a></li>
+                 <li class="dropdown">
+                    <a href="#result">Result</a>
+                    <div class="dropdown-content">
+                        <a href="/result">BCA</a>
+                    </div>
+                </li>
                 <li class="dropdown">
                     <a href="#courses">Courses</a>
                     <div class="dropdown-content">
@@ -1149,6 +1155,16 @@
                 <%}else{%>
 
             <li><a href="/">🏠 Home</a></li>
+
+                        <li>
+                <div class="dropdown-toggle" onclick="toggleDropdown(this)">
+                    <a>📄 Result</a>
+                </div>
+                <ul class="side-nav-submenu">
+                    <li><a href="/Result">BCA Result</a></li>
+                </ul>
+            </li>
+
             <li>
                 <div class="dropdown-toggle" onclick="toggleDropdown(this)">
                     <a>📚 Courses</a>
