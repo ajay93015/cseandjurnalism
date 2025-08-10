@@ -108,36 +108,47 @@
             <label for="user">User (optional):</label>
             <input type="text" id="user" name="user" placeholder="Enter Your Name">
 
-            <button type="submit">Verify Payment</button>
+            <button onclick="verify()">Verify Payment</button>
         </div>
 
         <div id="finalip"></div>
     </div>
 
     <script>
-        document.getElementById('verifyForm').addEventListener('submit', function(e) {
-            e.preventDefault();
+         function verify(){
+            
             
             const utr = document.getElementById('utr').value.trim();
             const user = document.getElementById('user').value.trim();
             const resultDiv = document.getElementById('finalip');
             
-            fetch('/verify', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ utr, user })
-            })
-            .then(res => res.json())
-            .then(data => {
+           
+const xhr = new XMLHttpRequest();
+xhr.open('POST', '/verify', true);
+xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+
+xhr.onreadystatechange = function() {
+    if (xhr.readyState === 4) {
+        if (xhr.status === 200) {
+            try {
+                const data = JSON.parse(xhr.responseText);
                 resultDiv.style.color = data.success ? 'lightgreen' : 'red';
-                resultDiv.innerHTML = data.message;
-                if (data.success) document.getElementById('verifyForm').reset();
-            })
-            .catch(() => {
+                resultDiv.textContent = data.message;
+            } catch (err) {
                 resultDiv.style.color = 'red';
-                resultDiv.innerHTML = 'Error occurred during verification';
-            });
-        });
+                resultDiv.textContent = 'Invalid server response';
+            }
+        } else {
+            resultDiv.style.color = 'red';
+            resultDiv.textContent = 'Server error: ' + xhr.status;
+        }
+    }
+};
+
+const params = `utr=${encodeURIComponent(utr)}&user=${encodeURIComponent(user)}`;
+xhr.send(params);
+
+        };
     </script>
 
 </div>
