@@ -1,0 +1,43 @@
+<%-include("header")-%>
+    <title>Messages</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+    <h2>Payment Messages</h2>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Message</th>
+                <th>Amount</th>
+                <th>TXN ID</th>
+                <th>User</th>
+                <th>Created At</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% messages.forEach(function(msg) { %>
+            <tr>
+                <td><%= msg.id %></td>
+                <td><%= msg.message %></td>
+                <td><%= msg.amount ? 'Rs.' + msg.amount : '-' %></td>
+                <td><%= msg.txnid || '-' %></td>
+                <td><%= msg.user || 'Empty' %></td>
+                <td><%= new Date(msg.created_at).toLocaleString() %></td>
+            </tr>
+            <% }); %>
+        </tbody>
+    </table>
+    
+    <br>
+    <a href="/payment">Back to Payment</a>
+</body>
+</html>
+<%-include("footer")-%>
