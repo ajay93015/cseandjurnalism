@@ -267,12 +267,12 @@ app.post('/verify', (req, res) => {
     const { utr, user } = req.body;
     
     if (!utr) {
-        return res.status(400).json({ error: 'UTR is required' });
+        return res.json({  success: false, message: 'UTR is required' });
     }
 
     // Find message by txnid and update user
     paybydb.run(
-        `UPDATE messages SET user = ? WHERE txnid = ?`,
+        `UPDATE messages SET user = ? WHERE txnid = ? AND user = ''`,
         [user || '', utr],
         function(err) {
             if (err) {
@@ -281,7 +281,7 @@ app.post('/verify', (req, res) => {
             }
             
             if (this.changes === 0) {
-                return res.json({ success: false, message: 'UTR not found' });
+                return res.json({ success: false, message: 'UTR not found Or Alerady Updated' });
             }
             
             res.json({ 
