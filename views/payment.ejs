@@ -1,0 +1,145 @@
+<%-include("header")-%>
+
+<div style="margin:auto;justify-items: center;background-color:whitesmoke;color:lightskyblue;margin-top-bottom:2%;text-align:center;margin-bottom:2%;border-radius:5px;">
+      
+
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Portal</title>
+    <style>
+       
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(8px);
+            border-radius: 15px;
+            padding: 25px;
+            max-width: 450px;
+            width: 100%;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+        }
+
+        h2, h3 {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .qr-box {
+            width: 220px;
+            height: 220px;
+            margin: 0 auto 15px;
+            border-radius: 10px;
+            background: #fff url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMQAAADECAYAAADApo5rAAAAAklEQVR4AewaftIAAAijSURBVO3BwY4kuRUEwXCi/v+XXQMdiKcLASKzenpXYYZ/pKr+a6WqtpWq2laqalupqm2lqraVqtpWqmpbqaptpaq2laraVqpqW6mqbaWqtpWq2laqavvkISA/Sc0JkBtqbgCZ1NwAcqLmTUDepGYCMqmZgPwkNU+sVNW2UlXbSlVtn7xMzZuAnAC5oeZvUvMmIE+o+Ulq3gTkTStVta1U1bZSVdsnXwbkhprfBMikZgIyqZmAnKh5k5oJyKTmBMik5puA3FDzTStVta1U1bZSVdsn/zJqJiA3gExqTtTcUHMCZFIzAZnUvEnN/7OVqtpWqmpbqartk38ZIJOaEyAnQCY1J0CeUDMBmdScADkBMqm5AeTfbKWqtpWq2laqavvky9T8JkAmNROQSc0EZFLzJiCTmgnI36TmTWp+k5Wq2laqalupqu2TlwH5m9RMQCY1E5BJzQRkUjMBmdRMQE6ATGomIJOaCcikZgIyqZmATGomIJOaCcik5gTIb7ZSVdtKVW0rVbV98pCav0nNBGRSc6LmBpATIE8AeZOaCcgTQG6o+SdZqaptpaq2laraPvkyIJOaEyBvAjKpmYBMam6oOQEyAZnUTEBuqJmATGpO1DyhZgIyqZmAvEnNm1aqalupqm2lqrZPHgIyqZnUTEBO1NwAMqmZgExAJjU31ExAJjWTmm8CcgJkUvMmIJOaCcikZgJyomYC8k0rVbWtVNW2UlUb/pEfBGRScwJkUvMmIG9SMwF5k5oJyKRmAnKi5gaQSc0JkBM1J0BuqHlipaq2laraVqpq++SXU3MC5ETNBOQJNROQEzUnQCY1N9RMQE7UTEBuqPkmIJOaEyBvWqmqbaWqtpWq2j55CMibgJyoOVEzAZnUnAA5ATKpmYCcqJnUTEAmNROQEzUTkBM1E5ATICdqJjUTkAnIpOZvWqmqbaWqtpWq2j75y4CcqDlRMwG5AeQJIJOaEyCTmhtqvknNBGRSMwGZgExqTtQ8oeZNK1W1rVTVtlJV2ycPqZmATGomICdqJiA31ExATtRMQN4EZFIzAZnUnAA5UXMCZFLzJjVPAJnUTEBO1DyxUlXbSlVtK1W14R/5IiCTmgnIpOYEyA01N4BMak6A3FBzA8ik5gTIpOYJIG9S8wSQEzVPrFTVtlJV20pVbZ+8DMik5gaQEzUTkEnNE2pOgJyomYDcAPImICdqJiAnak6AnACZ1ExAJjWTmgnIm1aqalupqm2lqrZPXqbmhprfBMikZlIzAZmAPKFmAnIC5JvUnACZ1ExAJjW/2UpVbStVta1U1fbJQ0BO1DwBZFLzTWpOgExqToBMQCY1E5AbaiYgk5oJyImaEyAnQE6ATGpuAJnUvGmlqraVqtpWqmr75IcBOVEzqTlRMwG5oWYCMqmZ1HyTmgnIDTU3gJyoOVEzAZnUnAA5AXICZFLzxEpVbStVta1U1fbJQ2qeUDMBOVFzQ80EZALyTwJkUnMC5JuATGpOgExqJiCTmgnIpOZNK1W1rVTVtlJV2ycPATlR84SaCciJmgnIDTU3gExqJjUTkBMgk5oJyAmQEzUnQG6oOQEyqXkTkEnNEytVta1U1bZSVdsnL1PzhJoJyA0gTwCZ1ExAToCcqHlCzYmaJ9ScqJmATGq+Sc0E5E0rVbWtVNW2UlUb/pEXAXmTmhMgJ2omICdqJiBPqJmAvEnNCZAbaiYgN9RMQE7UnAA5UfOmlaraVqpqW6mqDf/Ii4CcqJmATGomIG9S85sAmdRMQE7U3AAyqbkB5Ak1E5BJzd+0UlXbSlVtK1W1ffJlaiYgN9TcAHIC5CepOVEzAXkCyKTmCSBPqDlRcwPIiZonVqpqW6mqbaWqtk/+MjUnQE7UnKiZgExqbgCZ1LxJzQmQCcgJkBtAJjUTkBM1E5A3qZmAvGmlqraVqtpWqmr75IepmYCcqDkBMql5Asik5gTIiZoTIE+oeZOaEzVvUjMBmdRMQL5ppaq2laraVqpqwz/yIiCTmgnIpGYCcqLmBMik5gTIpOYGkBtqToBMak6AnKiZgPyTqDkBMql5YqWqtpWq2laqavvkZWpuADlRcwLkBpBJzZvUTEAmIE8AmdRMQCYgk5oJyKTmCSCTmgnIpOYEyKTmm1aqalupqm2lqrZPHgJyomZSMwGZ1ExAbqiZgExqJiCTmhMgk5oJyKRmAvKT1NwAMqmZgJyoeZOan7RSVdtKVW0rVbV98pCaEyCTmknNBGRSMwGZ1JyoOVEzAXkTkBtqJiCTmgnIDSAnaiYgk5oTICdqJiA31HzTSlVtK1W1rVTVhn/kASBPqJmA3FBzA8ikZgIyqZmAnKiZgJyoeQLIpGYCMql5AshvpuaJlaraVqpqW6mq7ZOH1LxJzQ0gJ2omNROQSc2JmgnIBOREzQTkRM0EZFLzm6i5AWRScwPIm1aqalupqm2lqrZPHgLyk9R8E5A3qZmATGpuqJmATGpuAPkmIJOaJ4B800pVbStVta1U1fbJy9S8CchPUjMBmdScALkBZFIzAZnUTGpO1ExATtRMQCY1E5ATNTeAnKj5ppWq2laqalupqu2TLwNyQ80NNROQEyAnQG4AOQFyA8hPUjMBeQLIE2omIBOQEzVPrFTVtlJV20pVbZ/U/1BzAmRS8wSQSc0E5ATIDTUnaiYgE5AbaiYgJ0AmNT9ppaq2laraVqpq++QfDsik5k1AJjU3gExqToBMaiYgTwB5Qs0EZFLzTUBO1DyxUlXbSlVtK1W1ffJlar5JzQTkRM0E5ETNE2repGYCMqk5AXKi5gTIpGYCMqk5UXNDzTetVNW2UlXbSlVtn7wMyN+kZgJyA8ib1JyomYBMQCY1k5oJyE8C8k1AJjUTkEnNEytVta1U1bZSVRv+kar6r5Wq2laqalupqm2lqraVqtpWqmpbqaptpaq2laraVqpqW6mqbaWqtpWq2laqalupqu0/YuaGueZ34RMAAAAASUVORK5CYII=') center/cover no-repeat;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #555;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        label {
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        input {
+            padding: 10px;
+            border-radius: 8px;
+            border: none;
+            outline: none;
+            font-size: 14px;
+        }
+
+        button {
+            padding: 10px;
+            background: #4cafef;
+            border: none;
+            color: white;
+            font-size: 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.3s ease;
+        }
+
+        button:hover {
+            background: #378fd4;
+        }
+
+        #finalip {
+            text-align: center;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        /* Mobile adjustments */
+        @media (max-width: 500px) {
+            .container {
+                padding: 15px;
+            }
+            .qr-box {
+                width: 180px;
+                height: 180px;
+            }
+        }
+    </style>
+
+
+
+    <div class="container">
+        <h2>Payment Portal</h2>
+
+        <h3>QR Code Payment</h3>
+        <p style="text-align:center; font-size:14px;">Scan the QR code below, make the payment, and enter your UTR below.</p>
+
+        <div class="qr-box"></div>
+
+        <h3>Verify Payment</h3>
+        <div id="verifyForm">
+            <label for="utr">UTR/Transaction ID:</label>
+            <input type="text" id="utr" name="utr" placeholder="Enter UTR Number" required="">
+
+            <label for="user">User (optional):</label>
+            <input type="text" id="user" name="user" placeholder="Enter Your Name">
+
+            <button type="submit">Verify Payment</button>
+        </div>
+
+        <div id="finalip"></div>
+    </div>
+
+    <script>
+        document.getElementById('verifyForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const utr = document.getElementById('utr').value.trim();
+            const user = document.getElementById('user').value.trim();
+            const resultDiv = document.getElementById('finalip');
+            
+            fetch('/verify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ utr, user })
+            })
+            .then(res => res.json())
+            .then(data => {
+                resultDiv.style.color = data.success ? 'lightgreen' : 'red';
+                resultDiv.innerHTML = data.message;
+                if (data.success) document.getElementById('verifyForm').reset();
+            })
+            .catch(() => {
+                resultDiv.style.color = 'red';
+                resultDiv.innerHTML = 'Error occurred during verification';
+            });
+        });
+    </script>
+
+</div>
+
+<%-include("footer")-%>
