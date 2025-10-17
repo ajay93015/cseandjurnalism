@@ -169,7 +169,7 @@ app.post('/signup', async (req, res) => {
   } = req.body;
 
   const sql = `
-    INSERT INTO students (
+    INSERT INTO student (
       rollno, name, application_no,
       fathername, mothername, mobileno,
       other1, other2, other3, other4,
