@@ -159,46 +159,62 @@ app.get('/signup', (req, res) => {
   res.render('signup');
 });
 
-// Handle Signup POST
+// ✅ Handle Signup POST safely
 app.post('/signup', async (req, res) => {
-  const {
-    rollno, name, application_no,
-    fathername, mothername, mobileno,
-    other1, other2, other3, other4,
-    other5, other6, other7, other8
-  } = req.body;
-
-  const sql = `
-    INSERT INTO student (
+  try {
+    // Destructure expected fields from req.body
+    const {
       rollno, name, application_no,
       fathername, mothername, mobileno,
-      other1, other2, other3, other4,
-      other5, other6, other7, other8
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `;
+      other1 = null, other2 = null, other3 = null, other4 = null,
+      other5 = null, other6 = null, other7 = null, other8 = null
+    } = req.body;
 
-  const values = [
-    rollno, name, application_no,
-    fathername, mothername, mobileno,
-    other1, other2, other3, other4,
-    other5, other6, other7, other8
-  ];
-
-  db.run(sql, values, function (err) {
-    if (err) {
-      return res.send('❌ Error inserting into database: ' + err.message);
+    // ✅ Validate required fields
+    if (!rollno || !name || !application_no) {
+      return res.status(400).send('❌ Missing required fields: rollno, name, or application_no');
     }
 
-    res.render('success', {
-      user: {
-        id: this.lastID,
+    // ✅ Define the SQL query with correct placeholders
+    const sql = `
+      INSERT INTO student (
         rollno, name, application_no,
         fathername, mothername, mobileno,
         other1, other2, other3, other4,
         other5, other6, other7, other8
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `;
+
+    const values = [
+      rollno, name, application_no,
+      fathername, mothername, mobileno,
+      other1, other2, other3, other4,
+      other5, other6, other7, other8
+    ];
+
+    // ✅ Execute the query
+    db.run(sql, values, function (err) {
+      if (err) {
+        console.error('Database Insert Error:', err);
+        return res.status(500).send('❌ Error inserting into database: ' + err.message);
       }
+
+      // ✅ On success, render the success page
+      res.render('success', {
+        user: {
+          id: this.lastID,
+          rollno, name, application_no,
+          fathername, mothername, mobileno,
+          other1, other2, other3, other4,
+          other5, other6, other7, other8
+        }
+      });
     });
-  });
+  } catch (error) {
+    console.error('Unexpected Error:', error);
+    res.status(500).send('❌ Unexpected server error: ' + error.message);
+  }
 });
 
 //newpga
