@@ -17,7 +17,8 @@ const http = require('http');
 const socketIo = require('socket.io');
 const server = http.createServer(app);
 const io = socketIo(server);
-
+app.use(express.json());                 // parses application/json
+app.use(express.urlencoded({ extended: true }));
 app.use(sessions({
     secret: 'K0201508',
     resave: true,
