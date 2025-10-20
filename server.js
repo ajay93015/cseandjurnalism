@@ -322,7 +322,7 @@ app.get('/messages', (req, res) => {
 });
 
 const sites = [
-  "https://csandjurnalism.onrender.com"
+ // "https://csandjurnalism.onrender.com"
 ];
 
 const utcNow = new Date();
